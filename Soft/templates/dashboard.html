@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALHALA::SYS | Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <style>
+        body { background-color: #050505; color: #d4d4d4; background-image: linear-gradient(rgba(30, 30, 30, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(30, 30, 30, 0.5) 1px, transparent 1px); background-size: 40px 40px; background-attachment: fixed; overflow-x: hidden; }
+        .endfield-border { border: 1px solid #333; position: relative; }
+        .endfield-border::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 8px; height: 8px; border-bottom: 2px solid #eab308; border-right: 2px solid #eab308; }
+        .endfield-border-cyan::after { border-color: #06b6d4; }
+        .fc { font-family: monospace; font-size: 0.75rem; --fc-page-bg-color: transparent; --fc-border-color: #222; }
+        .fc-theme-standard td, .fc-theme-standard th { border-color: #222; }
+        .fc-col-header-cell { background-color: #111; color: #888; padding: 4px 0; font-weight: normal; }
+        .fc-daygrid-day-number { color: #aaa; text-decoration: none !important; }
+        .fc-daygrid-day:hover { background-color: rgba(234, 179, 8, 0.1); cursor: crosshair; }
+        .fc .fc-toolbar.fc-header-toolbar { margin-bottom: 0.5em; justify-content: center; gap: 5px;}
+        .fc .fc-toolbar-title { font-size: 1rem !important; color: #eab308; text-transform: uppercase; letter-spacing: 2px; }
+        .fc-button-primary { background-color: #111 !important; border: 1px solid #333 !important; color: #888 !important; text-transform: uppercase; font-size: 0.6rem !important; padding: 2px 6px !important;}
+        .fc-button-primary:hover { border-color: #eab308 !important; color: #eab308 !important; }
+        .fc-event { display: none !important; }
+        .has-events { position: relative; }
+        .has-events::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #06b6d4; border-radius: 50%; }
+        #boot-screen { transition: opacity 0.8s ease-out; }
+        .typewriter h1 { overflow: hidden; white-space: nowrap; margin: 0 auto; letter-spacing: 0.3em; animation: typing 1.5s steps(30, end); }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #050505; } ::-webkit-scrollbar-thumb { background: #333; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(4px); }
+        
+        /* Estilos del Mad Libs */
+        .mad-input { border: none; border-bottom: 2px dashed #06b6d4; background: transparent; color: #06b6d4; font-family: monospace; outline: none; padding: 0 4px; width: 120px; text-align: center; }
+        .mad-input:focus { border-bottom: 2px solid #eab308; color: #eab308; }
+        .mad-select { background: transparent; border: 1px solid #06b6d4; color: #06b6d4; outline: none; padding: 2px; font-family: monospace; cursor: pointer; }
+    </style>
+</head>
+<body class="font-sans flex">
+
+    <div id="boot-screen" class="fixed inset-0 bg-[#020202] z-[999] flex flex-col items-center justify-center">
+        <div class="typewriter text-center">
+            <h1 class="text-yellow-500 font-mono text-3xl md:text-5xl uppercase font-bold border-r-2 border-yellow-500 pr-2">VALHALA::SYS</h1>
+            <p class="text-cyan-500 font-mono text-xs mt-4 uppercase tracking-[0.4em] animate-pulse">Iniciando Protocolo Operativo...</p>
+        </div>
+    </div>
+
+    <!-- MENÚ LATERAL -->
+    <nav class="fixed left-0 top-0 h-screen w-64 bg-[#0a0a0a] border-r border-gray-800 z-50 flex flex-col justify-between">
+        <div>
+            <div class="p-6 border-b border-gray-800">
+                <span class="font-mono font-bold text-xl tracking-widest text-yellow-500 block">VALHALA</span>
+                <span class="font-mono text-[10px] text-gray-500 tracking-[0.2em]">TERMINAL_OPERATIVA</span>
+            </div>
+            <div class="flex flex-col p-4 space-y-2 font-mono text-xs uppercase tracking-widest">
+                <a href="{{ url_for('dashboard') }}" class="text-yellow-400 bg-yellow-900 bg-opacity-10 border-l-2 border-yellow-500 px-4 py-3">Monitor_Eventos</a>
+                <button onclick="toggleCalendar()" class="text-left text-cyan-500 hover:bg-gray-900 hover:text-cyan-400 border-l-2 border-transparent hover:border-cyan-500 px-4 py-3 transition flex justify-between items-center group">
+                    <span>Selector_Fechas</span><span class="text-gray-600 group-hover:text-cyan-500">▶</span>
+                </button>
+                <a href="{{ url_for('my_events') }}" class="text-gray-500 hover:bg-gray-900 hover:text-white border-l-2 border-transparent px-4 py-3 transition">Mis_Registros</a>
+                <a href="{{ url_for('profile') }}" class="text-gray-500 hover:bg-gray-900 hover:text-white border-l-2 border-transparent px-4 py-3 transition">Perfil_Usuario</a>
+                
+                {% if user.role == 'admin' %}
+                <div class="pt-4 mt-4 border-t border-gray-800">
+                    <p class="text-[9px] text-gray-600 mb-2">/ PROTOCOLOS_ADMIN</p>
+                    <button onclick="document.getElementById('modal-pending').classList.remove('hidden')" class="w-full text-left text-yellow-600 hover:bg-yellow-900 hover:bg-opacity-20 px-4 py-3 transition flex justify-between">
+                        <span>[+] Revisiones_Pendientes</span>
+                        <span class="bg-yellow-500 text-black px-1">{{ pending_requests|length }}</span>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 bg-[#050505]">
+            <p class="font-mono text-white text-xs uppercase tracking-wider truncate">{{ user.name }}</p>
+            <p class="font-mono text-cyan-600 text-[10px] uppercase truncate mt-1">[{{ user.role }}]</p>
+            <a href="{{ url_for('logout') }}" class="inline-block mt-3 text-[10px] text-red-500 border border-red-900 bg-red-900 bg-opacity-20 hover:bg-opacity-40 px-3 py-1 font-mono uppercase transition">Desconectar</a>
+        </div>
+    </nav>
+
+    <!-- CALENDARIO LATERAL -->
+    <div id="calendar-sidebar" class="fixed left-64 top-0 h-screen w-80 bg-[#0f0f0f] border-r border-gray-800 z-40 transform -translate-x-full transition-transform duration-300 shadow-2xl p-4 flex flex-col">
+        <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+            <h3 class="font-mono text-yellow-500 text-xs uppercase tracking-widest">Base de Datos Temporal</h3>
+            <button onclick="toggleCalendar()" class="text-gray-500 hover:text-white font-mono">✖</button>
+        </div>
+        <div id="calendar" class="flex-grow"></div>
+    </div>
+
+    <!-- MAIN -->
+    <main class="ml-64 flex-grow min-h-screen p-8 relative">
+        <div class="border-b border-gray-800 pb-4 mb-8 flex justify-between items-end">
+            <div>
+                <h2 class="font-mono text-3xl text-white uppercase tracking-widest" id="display-date">CARGANDO...</h2>
+                <p class="font-mono text-cyan-500 text-xs uppercase tracking-[0.2em] mt-2">Monitoreo de actividad diaria</p>
+            </div>
+            
+            {% if user.role in ['admin', 'organizer'] %}
+            <a href="{{ url_for('request_space') }}" class="bg-yellow-500 hover:bg-yellow-400 text-black font-mono font-bold text-xs uppercase tracking-widest px-6 py-3 transition shadow-[0_0_10px_rgba(234,179,8,0.2)]">
+                [ Solicitar_Espacio ]
+            </a>
+            {% endif %}
+        </div>
+
+        <div id="day-events-list" class="max-w-4xl space-y-4"></div>
+    </main>
+
+    <!-- ========================================== -->
+    <!-- MODALES DE ADMIN (Bandeja y Mad Libs)      -->
+    <!-- ========================================== -->
+    {% if user.role == 'admin' %}
+    
+    <!-- BANDEJA PENDIENTES -->
+    <div id="modal-pending" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-[#0f0f0f] border border-yellow-500 w-full max-w-3xl mx-4 max-h-[80vh] flex flex-col shadow-[0_0_20px_rgba(234,179,8,0.15)]">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#050505]">
+                <h3 class="font-mono text-yellow-500 text-sm uppercase tracking-widest">/ SOLICITUDES_PENDIENTES /</h3>
+                <button onclick="document.getElementById('modal-pending').classList.add('hidden')" class="text-gray-500 hover:text-white">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4">
+                {% if pending_requests %}
+                    {% for req in pending_requests %}
+                    <div class="border border-gray-700 bg-black p-4 flex justify-between items-center hover:border-cyan-500 transition">
+                        <div class="font-mono">
+                            <p class="text-white text-sm uppercase tracking-wider">{{ req.name }}</p>
+                            <p class="text-xs text-gray-500 mt-1">> Solicitante: {{ req.organizer.name }} | Sede: {{ req.location }}</p>
+                        </div>
+                        <button onclick="openMadLibs('{{ req.id }}', '{{ req.name }}', '{{ req.organizer.name }}')" class="border border-cyan-800 text-cyan-500 bg-cyan-900 bg-opacity-20 hover:bg-opacity-40 px-4 py-2 text-[10px] font-mono uppercase tracking-widest transition">
+                            Evaluar_Expediente
+                        </button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center font-mono text-gray-500 text-xs">NO HAY SOLICITUDES EN COLA.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- MAD LIBS FORM -->
+    <div id="modal-madlibs" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-overlay">
+        <div class="bg-[#0a0a0a] border border-cyan-500 w-full max-w-2xl mx-4 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+            <div class="p-4 border-b border-gray-800 bg-[#050505] flex justify-between items-center">
+                <h3 class="font-mono text-cyan-500 text-sm uppercase tracking-widest">Generador de Resolutivos (Aval Docx)</h3>
+                <button onclick="document.getElementById('modal-madlibs').classList.add('hidden')" class="text-gray-500 hover:text-white">&times;</button>
+            </div>
+            
+            <form id="madlibs-form" class="p-8">
+                <input type="hidden" id="madlibs-event-id">
+                
+                <p class="font-mono text-gray-300 text-sm leading-8 text-justify">
+                    El evento corporativo denominado <span class="text-white font-bold" id="ml-event-name">[NOMBRE]</span>, 
+                    solicitado por <span class="text-white font-bold" id="ml-org-name">[ORGANIZADOR]</span>, ha sido revisado por la Junta Administrativa.
+                    <br><br>
+                    Por lo tanto, se emite una resolución de estado: 
+                    <select id="ml-resolucion" class="mad-select" required>
+                        <option value="APROBADO">APROBADO</option>
+                        <option value="DENEGADO">DENEGADO</option>
+                    </select>
+                    asignando el número de folio interno: <input type="text" id="ml-folio" class="mad-input" placeholder="Ej. A-001" required>. 
+                    <br><br>
+                    Condiciones adicionales para la sede: <input type="text" id="ml-condiciones" class="mad-input !w-64" placeholder="Ej. Ninguna restricción" required>.
+                    <br><br>
+                    Firma de autorización a cargo de: 
+                    <select id="ml-firma" class="mad-select" required>
+                        <option value="Director General">Director General</option>
+                        <option value="Jefe de Logística">Jefe de Logística</option>
+                    </select>.
+                </p>
+
+                <div class="mt-8 flex justify-end gap-4">
+                    <button type="button" onclick="document.getElementById('modal-madlibs').classList.add('hidden')" class="border border-gray-600 text-gray-400 hover:text-white font-mono text-xs px-6 py-3 uppercase tracking-widest">Cancelar</button>
+                    <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs px-6 py-3 uppercase tracking-widest shadow-[0_0_10px_rgba(6,182,212,0.4)]">
+                        Generar_Documento & Enviar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const boot = document.getElementById('boot-screen');
+                boot.style.opacity = '0';
+                setTimeout(() => boot.style.display = 'none', 800);
+            }, 1000);
+        });
+
+        let calendarOpen = false;
+        function toggleCalendar() {
+            const sidebar = document.getElementById('calendar-sidebar');
+            calendarOpen = !calendarOpen;
+            if(calendarOpen) sidebar.classList.remove('-translate-x-full');
+            else sidebar.classList.add('-translate-x-full');
+        }
+
+        let globalEvents = [];
+        let currentDateStr = new Date().toISOString().split('T')[0];
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const response = await fetch('/api/calendar');
+            globalEvents = await response.json();
+            
+            updateDayView(currentDateStr);
+
+            var calendarEl = document.getElementById('calendar');
+            var calendarInstance = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth', locale: 'es', height: '100%',
+                headerToolbar: { left: 'prev', center: 'title', right: 'next' },
+                dayCellDidMount: function(info) {
+                    if(globalEvents.some(e => e.start.startsWith(info.dateStr))) info.el.classList.add('has-events');
+                },
+                dateClick: function(info) {
+                    updateDayView(info.dateStr);
+                    if(window.innerWidth < 1024) toggleCalendar();
+                }
+            });
+            calendarInstance.render();
+        });
+
+        function updateDayView(dateStr) {
+            const dateObj = new Date(dateStr + "T12:00:00");
+            document.getElementById('display-date').innerText = dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            const dayEvents = globalEvents.filter(e => e.start.startsWith(dateStr));
+            const listContainer = document.getElementById('day-events-list');
+            listContainer.innerHTML = '';
+            
+            if (dayEvents.length === 0) {
+                listContainer.innerHTML = `<div class="endfield-border p-8 bg-[#0a0a0a] text-center opacity-70"><p class="font-mono text-gray-500 uppercase tracking-widest text-xs">NO HAY ACTIVIDAD REGISTRADA PARA ESTE CICLO.</p></div>`;
+            } else {
+                dayEvents.forEach(e => {
+                    listContainer.innerHTML += `
+                        <div class="endfield-border-cyan bg-[#0a0a0a] p-6 hover:bg-[#111] transition flex justify-between items-center">
+                            <div class="font-mono">
+                                <p class="text-cyan-500 text-xs uppercase tracking-widest mb-1">> REGISTRO_${e.id}</p>
+                                <h3 class="text-white text-xl uppercase tracking-wider mb-2">${e.title}</h3>
+                                <p class="text-xs text-gray-500">LOC: ${e.extendedProps.location}</p>
+                            </div>
+                        </div>`;
+                });
+            }
+        }
+
+        // Lógica Mad Libs (Solo Admin)
+        function openMadLibs(id, eventName, orgName) {
+            const pendingModal = document.getElementById('modal-pending');
+            if (pendingModal) pendingModal.classList.add('hidden'); // Ocultar bandeja
+            
+            document.getElementById('madlibs-event-id').value = id;
+            document.getElementById('ml-event-name').innerText = eventName;
+            document.getElementById('ml-org-name').innerText = orgName;
+            
+            // Limpiar campos
+            document.getElementById('ml-folio').value = '';
+            document.getElementById('ml-condiciones').value = '';
+            
+            const madlibsModal = document.getElementById('modal-madlibs');
+            if (madlibsModal) madlibsModal.classList.remove('hidden');
+        }
+
+        // 2. Envío del formulario (Protegido contra errores de carga)
+        document.addEventListener('DOMContentLoaded', () => {
+            const madlibsForm = document.getElementById('madlibs-form');
+            
+            // Solo agrega el evento si el formulario existe en la pantalla (es admin)
+            if (madlibsForm) {
+                madlibsForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const id = document.getElementById('madlibs-event-id').value;
+                    if (!id) return alert("Error: No se detectó el ID del evento.");
+
+                    const fd = new FormData();
+                    fd.append('resolucion', document.getElementById('ml-resolucion').value);
+                    fd.append('folio', document.getElementById('ml-folio').value);
+                    fd.append('condiciones', document.getElementById('ml-condiciones').value);
+                    fd.append('firma', document.getElementById('ml-firma').value);
+
+                    try {
+                        const res = await fetch(`/api/events/${id}/review`, { method: 'POST', body: fd });
+                        if(res.ok) {
+                            alert("Resolutivo Generado. Documento Word empaquetado y enviado a ejecutivos.");
+                            location.reload();
+                        } else {
+                            const data = await res.json();
+                            alert("Error: " + (data.error || "Fallo en el servidor"));
+                        }
+                    } catch (error) {
+                        alert("Error de conexión con el servidor Flask.");
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

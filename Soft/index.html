@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Valhala - Gestión de Eventos</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: #ecf0f1; margin: 0; padding: 20px; color: var(--primary); }
+        .container { max-width: 900px; margin: 0 auto; display: grid; gap: 20px; grid-template-columns: 1fr; }
+        @media(min-width: 768px) { .container { grid-template-columns: 1fr 1fr; } }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { grid-column: 1 / -1; text-align: center; color: var(--primary); }
+        h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+        input { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; margin-top: 10px; }
+        .btn-primary { background-color: var(--accent); }
+        .btn-primary:hover { background-color: #2980b9; }
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover { background-color: #2196f3; }
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #c0392b; }
+        #map { height: 350px; width: 100%; border-radius: 8px; margin-top: 15px; border: 1px solid #bdc3c7; z-index: 1; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Centro de Control de Eventos</h1>
+
+        <!-- Panel de Creación -->
+        <div class="card">
+            <h2>1. Planificar Nuevo Evento</h2>
+            <form id="createForm">
+                <div class="form-group">
+                    <label>Nombre de la Conferencia/Taller</label>
+                    <input type="text" id="name" required placeholder="Ej. Cumbre Tecnológica 2026">
+                </div>
+                <div class="form-group">
+                    <label>Fecha y Hora de Inicio</label>
+                    <input type="datetime-local" id="date" required>
+                </div>
+                <div class="form-group">
+                    <label>Duración Estimada</label>
+                    <input type="text" id="duration" required placeholder="Ej. 4 horas">
+                </div>
+                <div class="form-group">
+                    <label>Correo del Organizador (Para Autorizaciones)</label>
+                    <input type="email" id="email" required placeholder="organizador@empresa.com">
+                </div>
+                
+                <label>Ubicación del Evento</label>
+                <button type="button" class="btn-success" onclick="requestLocation()">📍 Detectar mi ubicación actual</button>
+                <div id="map"></div>
+                
+                <input type="hidden" id="lat">
+                <input type="hidden" id="lng">
+                
+                <button type="submit" class="btn-primary" style="margin-top: 20px;">Registrar Evento</button>
+            </form>
+        </div>
+
+        <!-- Panel de Modificación Segura -->
+        <div class="card hidden" id="adminPanel">
+            <h2>2. Modificar Evento Activo</h2>
+            <p style="font-size: 0.9rem; color: #7f8c8d;">Estás editando el evento ID: <span id="displayEventId" style="font-weight:bold;"></span></p>
+            
+            <div class="form-group">
+                <label>Nueva Fecha Propuesta</label>
+                <input type="datetime-local" id="newDate">
+            </div>
+            <button onclick="requestModification()" class="btn-primary">Paso 1: Solicitar Autorización</button>
+            
+            <hr style="border: 0; height: 1px; background: #ecf0f1; margin: 25px 0;">
+            
+            <div class="form-group">
+                <label>Token de Seguridad</label>
+                <input type="text" id="authToken" placeholder="Pega aquí el código recibido por correo">
+            </div>
+            <button onclick="confirmModification()" class="btn-danger">Paso 2: Confirmar y Notificar Cambios</button>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let marker;
+        let activeEventId = null;
+
+        // Inicializar mapa
+        function initMap(lat = 19.0414, lng = -98.2063) { // Coordenadas genéricas iniciales
+            if (!map) {
+                map = L.map('map').setView([lat, lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            }
+        }
+        initMap();
+
+        // Obtener permisos de ubicación
+        function requestLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    document.getElementById('lat').value = lat;
+                    document.getElementById('lng').value = lng;
+                    
+                    map.setView([lat, lng], 16);
+                    if (marker) map.removeLayer(marker);
+                    marker = L.marker([lat, lng]).addTo(map)
+                        .bindPopup('Sede Confirmada')
+                        .openPopup();
+                }, (err) => {
+                    alert("Por favor, permite el acceso a la ubicación en tu navegador para fijar la sede.");
+                });
+            }
+        }
+
+        // Crear Evento
+        document.getElementById('createForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if(!document.getElementById('lat').value) {
+                alert("Debes fijar una ubicación en el mapa primero.");
+                return;
+            }
+
+            const payload = {
+                name: document.getElementById('name').value,
+                date: document.getElementById('date').value,
+                duration: document.getElementById('duration').value,
+                email: document.getElementById('email').value,
+                lat: document.getElementById('lat').value,
+                lng: document.getElementById('lng').value
+            };
+
+            const res = await fetch('/api/events', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            
+            alert("✅ " + data.message);
+            activeEventId = data.event.id;
+            document.getElementById('displayEventId').innerText = activeEventId;
+            document.getElementById('adminPanel').classList.remove('hidden');
+        });
+
+        // Solicitar Cambio
+        async function requestModification() {
+            const newDate = document.getElementById('newDate').value;
+            if(!newDate) return alert("Selecciona una nueva fecha.");
+
+            const res = await fetch(`/api/events/${activeEventId}/request-change`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: newDate })
+            });
+            const data = await res.json();
+            alert("📨 " + data.message + "\n\n(Revisa la consola de tu servidor Python para copiar el Token)");
+        }
+
+        // Confirmar Cambio
+        async function confirmModification() {
+            const token = document.getElementById('authToken').value;
+            if(!token) return alert("Debes ingresar el token de autorización.");
+
+            const res = await fetch(`/api/events/confirm-change`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token })
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                alert("🚀 ¡Éxito! " + data.message);
+                document.getElementById('authToken').value = '';
+            } else {
+                alert("❌ Error: " + data.error);
+            }
+        }
+    </script>
+</body>
+</html>

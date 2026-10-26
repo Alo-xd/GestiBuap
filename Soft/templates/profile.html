@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil_Usuario | VALHALA::SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background-color: #050505; color: #d4d4d4; 
+            background-image: linear-gradient(rgba(30, 30, 30, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(30, 30, 30, 0.5) 1px, transparent 1px);
+            background-size: 40px 40px; background-attachment: fixed; overflow-x: hidden;
+        }
+        .endfield-border { border: 1px solid #333; position: relative; }
+        .endfield-border::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 8px; height: 8px; border-bottom: 2px solid #06b6d4; border-right: 2px solid #06b6d4; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #050505; } ::-webkit-scrollbar-thumb { background: #333; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="font-sans flex">
+
+    <!-- MENÚ LATERAL UNIFICADO -->
+    <nav class="fixed left-0 top-0 h-screen w-64 bg-[#0a0a0a] border-r border-gray-800 z-50 flex flex-col justify-between">
+        <div>
+            <div class="p-6 border-b border-gray-800">
+                <span class="font-mono font-bold text-xl tracking-widest text-yellow-500 block">VALHALA</span>
+                <span class="font-mono text-[10px] text-gray-500 tracking-[0.2em]">TERMINAL_OPERATIVA</span>
+            </div>
+            <div class="flex flex-col p-4 space-y-2 font-mono text-xs uppercase tracking-widest">
+                <a href="{{ url_for('dashboard') }}" class="text-gray-500 hover:bg-gray-900 hover:text-white border-l-2 border-transparent px-4 py-3 transition">Monitor_Eventos</a>
+                <a href="{{ url_for('my_events') }}" class="text-gray-500 hover:bg-gray-900 hover:text-white border-l-2 border-transparent px-4 py-3 transition">Mis_Registros</a>
+                
+                <!-- Activo -->
+                <a href="{{ url_for('profile') }}" class="text-cyan-400 bg-cyan-900 bg-opacity-10 border-l-2 border-cyan-500 px-4 py-3 transition">Perfil_Usuario</a>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 bg-[#050505]">
+            <p class="font-mono text-white text-xs uppercase tracking-wider truncate">{{ user.name }}</p>
+            <p class="font-mono text-cyan-600 text-[10px] uppercase truncate mt-1">[{{ user.role }}]</p>
+            <a href="{{ url_for('logout') }}" class="inline-block mt-3 text-[10px] text-red-500 border border-red-900 bg-red-900 bg-opacity-20 px-3 py-1 font-mono uppercase transition hover:bg-opacity-40">Desconectar</a>
+        </div>
+    </nav>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="ml-64 flex-grow min-h-screen p-8 relative">
+        <div class="border-b border-gray-800 pb-4 mb-8">
+            <h2 class="font-mono text-3xl text-white uppercase tracking-widest">/ IDENTIDAD_OPERATIVA /</h2>
+            <p class="font-mono text-cyan-500 text-xs uppercase tracking-[0.2em] mt-2">Gestión de credenciales de red</p>
+        </div>
+
+        <div class="max-w-2xl mx-auto">
+            <div class="endfield-border bg-[#0a0a0a] p-8 shadow-2xl">
+                <form method="POST" enctype="multipart/form-data" class="space-y-8">
+                    
+                    <!-- FOTO CLICKABLE -->
+                    <div class="flex flex-col items-center">
+                        <label for="profile_pic_input" class="cursor-pointer relative group block rounded-sm border-2 border-gray-600 hover:border-cyan-500 p-1 transition">
+                            {% if user.profile_pic %}
+                                <img id="preview_img" src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}" class="w-32 h-32 object-cover bg-black filter grayscale group-hover:grayscale-0 transition duration-500">
+                            {% else %}
+                                <img id="preview_img" src="https://ui-avatars.com/api/?name={{ user.name }}&background=111&color=06b6d4&size=128&rounded=false" class="w-32 h-32 object-cover">
+                            {% endif %}
+                            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-70 transition duration-300">
+                                <span class="text-cyan-500 font-mono text-xs font-bold opacity-0 group-hover:opacity-100 uppercase tracking-widest">Reemplazar</span>
+                            </div>
+                        </label>
+                        <input type="file" id="profile_pic_input" name="profile_pic" accept=".jpg, .png, .jpeg" class="hidden" onchange="previewImage(event)">
+                        
+                        <div class="text-center mt-4 font-mono">
+                            <h2 class="text-xl font-bold text-white tracking-wider uppercase">{{ user.name }}</h2>
+                            <p class="text-gray-500 text-xs mt-2">[ ID: {{ user.employee_id }} | SEC: {{ user.section }} ]</p>
+                        </div>
+                    </div>
+
+                    <!-- FRASE PERSONALIZADA -->
+                    <div class="border-t border-gray-800 pt-6">
+                        <label class="block font-mono text-xs text-cyan-500 mb-2 uppercase tracking-widest">Frase o Designación (Máx. 100 caracteres)</label>
+                        <input type="text" name="phrase" value="{{ user.phrase }}" maxlength="100" placeholder="Escribe tu lema operativo..." class="w-full bg-black border border-gray-700 text-white p-3 font-mono text-sm focus:border-cyan-500 focus:outline-none transition">
+                        <p class="text-[10px] text-gray-600 font-mono mt-2 uppercase text-right" id="char-counter">0 / 100</p>
+                    </div>
+
+                    <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold uppercase tracking-widest py-3 transition shadow-[0_0_10px_rgba(6,182,212,0.2)]">Actualizar_Datos</button>
+                </form>
+            </div>
+
+            <!-- ZONA ROJA -->
+            <div class="mt-12 pt-8 border-t border-red-900 border-dashed text-center mb-12">
+                <p class="text-red-500 font-mono text-xs mb-4">ACCESO RESTRINGIDO: PROTOCOLO DE PURGA DE DATOS</p>
+                <button onclick="document.getElementById('modal-confirm-delete').classList.remove('hidden')" class="border border-red-600 text-red-500 hover:bg-red-600 hover:text-white font-mono text-sm uppercase px-6 py-3 tracking-widest transition">
+                    [ Eliminar_Registro_Permanente ]
+                </button>
+                <form id="delete-form" action="{{ url_for('delete_account') }}" method="POST" class="hidden"></form>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL ELIMINAR CUENTA -->
+    <div id="modal-confirm-delete" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-[#0a0a0a] border border-red-600 w-full max-w-md mx-4 p-6 shadow-[0_0_20px_rgba(220,38,38,0.2)]">
+            <h3 class="text-red-500 font-mono font-bold text-lg mb-4 uppercase tracking-widest">:: ADVERTENCIA CRÍTICA ::</h3>
+            <p class="text-gray-300 font-mono text-sm mb-8 leading-relaxed">ESTA ACCIÓN ES IRREVERSIBLE. PURGARÁ TODOS TUS REGISTROS Y EVENTOS DEL SISTEMA. ¿PROCEDER?</p>
+            <div class="flex justify-end space-x-4">
+                <button onclick="document.getElementById('modal-confirm-delete').classList.add('hidden')" class="border border-gray-600 text-gray-400 hover:text-white font-mono text-xs px-4 py-2 uppercase tracking-widest transition">Abortar</button>
+                <button onclick="document.getElementById('delete-form').submit()" class="bg-red-600 hover:bg-red-500 text-white font-mono font-bold text-xs px-6 py-2 uppercase tracking-widest transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function previewImage(event) {
+            const input = event.target;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { document.getElementById('preview_img').src = e.target.result; }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        // Contador de caracteres
+        const inputPhrase = document.querySelector('input[name="phrase"]');
+        const counter = document.getElementById('char-counter');
+        inputPhrase.addEventListener('input', () => {
+            counter.innerText = `${inputPhrase.value.length} / 100`;
+        });
+        counter.innerText = `${inputPhrase.value.length} / 100`; // Inicial
+    </script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar_Espacio | VALHALA::SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #050505; color: #d4d4d4; background-image: linear-gradient(rgba(30, 30, 30, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(30, 30, 30, 0.5) 1px, transparent 1px); background-size: 40px 40px; background-attachment: fixed; }
+        .endfield-border { border: 1px solid #333; position: relative; }
+        .endfield-border::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 8px; height: 8px; border-bottom: 2px solid #eab308; border-right: 2px solid #eab308; }
+        .input-term { background: #000; border: 1px solid #333; color: #fff; padding: 12px; font-family: monospace; font-size: 0.8rem; outline: none; transition: border 0.3s; width: 100%; }
+        .input-term:focus { border-color: #eab308; }
+        .section-title { font-family: monospace; color: #06b6d4; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px dashed #333; padding-bottom: 4px; margin-bottom: 16px; margin-top: 24px; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #050505; } ::-webkit-scrollbar-thumb { background: #333; }
+        
+        /* Checkbox Custom Endfield */
+        .check-term { appearance: none; width: 20px; height: 20px; border: 1px solid #333; background: #000; outline: none; cursor: pointer; position: relative; }
+        .check-term:checked { border-color: #eab308; background: rgba(234, 179, 8, 0.2); }
+        .check-term:checked::after { content: 'X'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #eab308; font-family: monospace; font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body class="font-sans flex">
+
+    <nav class="fixed left-0 top-0 h-screen w-64 bg-[#0a0a0a] border-r border-gray-800 z-50 flex flex-col justify-between">
+        <div>
+            <div class="p-6 border-b border-gray-800"><span class="font-mono font-bold text-xl tracking-widest text-yellow-500 block">VALHALA</span></div>
+            <div class="flex flex-col p-4 space-y-2 font-mono text-xs uppercase tracking-widest">
+                <a href="{{ url_for('dashboard') }}" class="text-gray-500 hover:bg-gray-900 hover:text-white border-l-2 border-transparent px-4 py-3 transition">Retornar</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="ml-64 flex-grow min-h-screen p-8 relative flex justify-center items-start pt-12">
+        <div class="w-full max-w-4xl endfield-border bg-[#0a0a0a] p-8 shadow-2xl mb-16">
+            <div class="border-b border-gray-800 pb-4 mb-6">
+                <h2 class="font-mono text-2xl text-yellow-500 uppercase tracking-widest">/ INICIALIZAR_SOLICITUD_AVANZADA /</h2>
+                <p class="font-mono text-gray-500 text-xs uppercase mt-2">Dossier técnico para revisión de la Junta Administrativa.</p>
+            </div>
+
+            <form action="{{ url_for('request_space') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                
+                <h3 class="section-title">1. Datos Generales</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Nombre del evento</label>
+                        <input type="text" name="name" required class="input-term">
+                    </div>
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Tipo de Evento</label>
+                        <select name="event_type" required class="input-term cursor-pointer">
+                            <option value="">Seleccionar...</option>
+                            <option value="Académico">Académico</option>
+                            <option value="Formativo">Formativo / Capacitación</option>
+                            <option value="Corporativo">Corporativo / Junta</option>
+                            <option value="Social">Social / Recreativo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Objetivo (Máx. 150 char)</label>
+                        <input type="text" name="objective" maxlength="150" required class="input-term">
+                    </div>
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Alcance</label>
+                        <select name="scope" required class="input-term cursor-pointer">
+                            <option value="Interno">Interno (Solo departamento)</option>
+                            <option value="General">General (Toda la empresa)</option>
+                            <option value="Público">Público (Externos admitidos)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Descripción detallada</label>
+                    <textarea name="description" rows="3" required class="input-term"></textarea>
+                </div>
+
+                <h3 class="section-title">2. Coordenadas Espacio-Temporales</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Fecha (DD/MM/AAAA)</label>
+                        <input type="date" name="fecha" required class="input-term text-gray-400">
+                    </div>
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Hora Inicio (24h)</label>
+                        <input type="time" name="start_time" required class="input-term text-gray-400">
+                    </div>
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Hora Fin (24h)</label>
+                        <input type="time" name="end_time" required class="input-term text-gray-400">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Ubicación (Link Google Maps / Sede Física)</label>
+                    <input type="text" name="location" required class="input-term">
+                </div>
+
+                <h3 class="section-title">3. Logística y Contacto</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Organizador (Identidad Sesión)</label>
+                        <input type="text" value="{{ user.name }} [{{ user.employee_id }}]" disabled class="input-term bg-gray-900 text-gray-600 border-gray-800 cursor-not-allowed">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Asistentes</label>
+                            <input type="number" name="attendee_count" required class="input-term">
+                        </div>
+                        <div>
+                            <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Cuota ($)</label>
+                            <input type="text" name="fee" placeholder="Ej. Gratuito / $500" required class="input-term">
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Número de Contacto</label>
+                        <input type="tel" name="contact_phone" required class="input-term">
+                    </div>
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Correo de Contacto</label>
+                        <input type="email" name="contact_email" value="{{ user.email }}" required class="input-term">
+                    </div>
+                </div>
+
+                <h3 class="section-title">4. Difusión y Requerimientos</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Antecedentes (Opcional)</label>
+                        <textarea name="background" rows="2" class="input-term"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Medios de Difusión</label>
+                        <textarea name="media" rows="2" placeholder="Ej. Redes sociales, Intranet..." class="input-term"></textarea>
+                    </div>
+                </div>
+
+                <!-- CHECKBOXES DINÁMICOS -->
+                <div class="bg-[#111] border border-gray-800 p-4 mt-6">
+                    
+                    <div class="flex items-center gap-4 mb-4">
+                        <input type="checkbox" name="requires_internet" id="req_net" class="check-term">
+                        <label for="req_net" class="font-mono text-sm text-gray-300 uppercase cursor-pointer">Requiere conexión a Internet</label>
+                    </div>
+
+                    <div class="flex items-center gap-4 mb-4 border-t border-gray-800 pt-4">
+                        <input type="checkbox" name="has_guests" id="has_guests" class="check-term" onchange="toggleGuests()">
+                        <label for="has_guests" class="font-mono text-sm text-yellow-500 uppercase cursor-pointer">Presencia de Invitados Especiales</label>
+                    </div>
+                    
+                    <!-- Formulario desplegable Invitados -->
+                    <div id="guests_container" class="hidden grid-cols-1 md:grid-cols-2 gap-6 pl-8 mb-4">
+                        <div><label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Nombre(s) del Invitado</label><input type="text" name="guest_names" class="input-term"></div>
+                        <div><label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Dependencia / Empresa / Universidad</label><input type="text" name="guest_affiliation" class="input-term"></div>
+                    </div>
+
+                    <div class="flex items-center gap-4 border-t border-gray-800 pt-4 mb-4">
+                        <input type="checkbox" name="requires_equipment" id="requires_equipment" class="check-term" onchange="toggleEquipment()">
+                        <label for="requires_equipment" class="font-mono text-sm text-cyan-500 uppercase cursor-pointer">Requiere equipos o materiales específicos</label>
+                    </div>
+
+                    <!-- Formulario desplegable Materiales (Subida de Imagen) -->
+                    <div id="equipment_container" class="hidden pl-8">
+                        <label class="block font-mono text-[10px] text-gray-400 mb-2 uppercase">Subir Imagen / Diagrama del Material Requerido</label>
+                        <input type="file" name="equipment_image" accept=".jpg, .png, .jpeg" class="input-term cursor-pointer">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-mono font-bold text-xs uppercase tracking-widest py-4 transition mt-8 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                    Emitir_Dossier_a_Junta
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function toggleGuests() {
+            const container = document.getElementById('guests_container');
+            const checkbox = document.getElementById('has_guests');
+            if (checkbox.checked) { container.classList.remove('hidden'); container.classList.add('grid'); } 
+            else { container.classList.add('hidden'); container.classList.remove('grid'); }
+        }
+
+        function toggleEquipment() {
+            const container = document.getElementById('equipment_container');
+            const checkbox = document.getElementById('requires_equipment');
+            if (checkbox.checked) container.classList.remove('hidden');
+            else container.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

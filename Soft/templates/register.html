@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valhala | Registro Corporativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-indigo-600">Registro Valhala</h1>
+            <p class="text-gray-500 mt-2 text-sm">Ingresa tus datos corporativos para solicitar acceso</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(category_filter=["error"]) %}
+          {% if messages %}
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 rounded text-sm">
+                <p>{{ messages[0] }}</p>
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('register') }}" method="POST" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase">Nombre Completo</label>
+                    <input type="text" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase">ID / Matrícula</label>
+                    <input type="text" name="employee_id" class="mt-1 block w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase">Correo (Institucional/Corporativo)</label>
+                <input type="email" name="email" class="mt-1 block w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                <p class="text-xs text-gray-400 mt-1">* Si tu correo termina en @admin.valhala.com se te asignará rol de Administrador.</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase">Sección / Área</label>
+                <input type="text" name="section" placeholder="Ej. Recursos Humanos, IT, Finanzas" class="mt-1 block w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Rol Solicitado</label>
+                <div class="flex space-x-6">
+                    <label class="flex items-center">
+                        <input type="radio" name="role" value="organizer" class="text-indigo-600 focus:ring-indigo-500 h-4 w-4" required>
+                        <span class="ml-2 text-sm text-gray-700">Organizador (Agendar)</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="role" value="user" class="text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                        <span class="ml-2 text-sm text-gray-700">Persona Común (Solo ver)</span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-md text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-6 transition">
+                Registrar Solicitud
+            </button>
+        </form>
+
+        <div class="mt-6 text-center text-sm">
+            <a href="{{ url_for('login') }}" class="text-indigo-600 hover:text-indigo-800 font-bold transition">← Volver al Inicio de Sesión</a>
+        </div>
+    </div>
+</body>
+</html>

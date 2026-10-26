@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valhala | Activar Cuenta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-green-600">Activa tu Cuenta</h1>
+            <p class="text-gray-500 mt-2 text-sm">Establece tu contraseña definitiva para <strong>{{ email }}</strong></p>
+        </div>
+        
+        {% with messages = get_flashed_messages(category_filter=["error"]) %}
+          {% if messages %}
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 rounded text-sm">
+                <p>{{ messages[0] }}</p>
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase">Nueva Contraseña</label>
+                <input type="password" name="password" minlength="6" class="mt-1 block w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-green-500 focus:border-green-500" required>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase">Confirmar Contraseña</label>
+                <input type="password" name="confirm_password" minlength="6" class="mt-1 block w-full p-2 border border-gray-300 rounded shadow-sm focus:ring-green-500 focus:border-green-500" required>
+            </div>
+            <button type="submit" class="w-full py-3 px-4 rounded-md shadow-md text-sm font-bold text-white bg-green-600 hover:bg-green-700 mt-6 transition">
+                Activar e Ingresar
+            </button>
+        </form>
+    </div>
+</body>
+</html>

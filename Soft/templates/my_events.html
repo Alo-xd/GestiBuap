@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis_Registros | VALHALA::SYS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #050505; color: #d4d4d4; background-image: linear-gradient(rgba(30, 30, 30, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(30, 30, 30, 0.5) 1px, transparent 1px); background-size: 40px 40px; background-attachment: fixed; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #050505; } ::-webkit-scrollbar-thumb { background: #333; }
+        .endfield-card { background: #0a0a0a; border: 1px solid #222; position: relative; transition: all 0.3s ease; }
+        .endfield-card:hover { border-color: #06b6d4; box-shadow: 0 0 15px rgba(6, 182, 212, 0.1); }
+        .endfield-card::after { content: ''; position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-bottom: 2px solid #555; border-right: 2px solid #555; }
+    </style>
+</head>
+<body class="font-sans flex">
+
+    <!-- MENÚ LATERAL UNIFICADO -->
+    <nav class="fixed left-0 top-0 h-screen w-64 bg-[#0a0a0a] border-r border-gray-800 z-50 flex flex-col justify-between">
+        <div>
+            <div class="p-6 border-b border-gray-800">
+                <span class="font-mono font-bold text-xl tracking-widest text-yellow-500 block">VALHALA</span>
+                <span class="font-mono text-[10px] text-gray-500 tracking-[0.2em]">TERMINAL_OPERATIVA</span>
+            </div>
+            <div class="flex flex-col p-4 space-y-2 font-mono text-xs uppercase tracking-widest">
+                <a href="{{ url_for('dashboard') }}" class="text-gray-500 hover:bg-gray-900 hover:text-white border-l-2 border-transparent px-4 py-3 transition">Monitor_Eventos</a>
+                
+                <!-- Activo -->
+                <a href="{{ url_for('my_events') }}" class="text-yellow-400 bg-yellow-900 bg-opacity-10 border-l-2 border-yellow-500 px-4 py-3 transition">Mis_Registros</a>
+                
+                <a href="{{ url_for('profile') }}" class="text-gray-500 hover:bg-gray-900 hover:text-white border-l-2 border-transparent px-4 py-3 transition">Perfil_Usuario</a>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 bg-[#050505]">
+            <p class="font-mono text-white text-xs uppercase tracking-wider truncate">{{ user.name }}</p>
+            <p class="font-mono text-cyan-600 text-[10px] uppercase truncate mt-1">[{{ user.role }}]</p>
+            <a href="{{ url_for('logout') }}" class="inline-block mt-3 text-[10px] text-red-500 border border-red-900 bg-red-900 bg-opacity-20 px-3 py-1 font-mono uppercase transition hover:bg-opacity-40">Desconectar</a>
+        </div>
+    </nav>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="ml-64 flex-grow min-h-screen p-8 relative">
+        <div class="border-b border-gray-800 pb-4 mb-8">
+            <h2 class="font-mono text-3xl text-white uppercase tracking-widest">/ BITÁCORA_OPERATIVA /</h2>
+            <p class="font-mono text-yellow-500 text-xs uppercase tracking-[0.2em] mt-2">Historial de registros y asignaciones</p>
+        </div>
+
+        <div class="max-w-5xl mx-auto">
+            {% if user.role in ['admin', 'organizer'] %}
+            <div class="mb-12">
+                <h2 class="font-mono text-sm text-yellow-500 border-l-4 border-yellow-500 pl-3 uppercase tracking-widest mb-6 bg-[#111] py-2">Registros Emitidos (Coordinación)</h2>
+                {% if organized_events %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for event in organized_events %}
+                        <div class="endfield-card overflow-hidden">
+                            <div class="relative">
+                                <img src="{{ url_for('static', filename='uploads/' + event.poster) }}" class="w-full h-40 object-cover filter grayscale hover:grayscale-0 transition duration-300">
+                                <div class="absolute top-0 right-0 bg-yellow-500 text-black font-mono text-[10px] px-2 py-1 uppercase font-bold">Coord</div>
+                            </div>
+                            <div class="p-5 font-mono">
+                                <h3 class="font-bold text-white text-sm uppercase tracking-wider truncate mb-2">{{ event.name }}</h3>
+                                <p class="text-xs text-gray-500 mt-1">> LOC: {{ event.location }}</p>
+                                <p class="text-xs text-gray-500">> T: {{ event.start_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                                <div class="mt-4 text-[10px] text-yellow-500 border border-yellow-900 bg-yellow-900 bg-opacity-20 inline-block px-3 py-1 uppercase tracking-widest">
+                                    {{ event.attendees.count() }} Unidades_Alistadas
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-600 font-mono text-xs uppercase tracking-widest border border-gray-800 p-4 text-center bg-black">0 Registros Autorizados.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div>
+                <h2 class="font-mono text-sm text-cyan-500 border-l-4 border-cyan-500 pl-3 uppercase tracking-widest mb-6 bg-[#111] py-2">Misiones_Asignadas (Participación)</h2>
+                {% if attended_events %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for event in attended_events %}
+                        <div class="endfield-card overflow-hidden">
+                            <img src="{{ url_for('static', filename='uploads/' + event.poster) }}" class="w-full h-32 object-cover opacity-60">
+                            <div class="p-5 font-mono">
+                                <h3 class="font-bold text-white text-sm uppercase tracking-wider truncate mb-2">{{ event.name }}</h3>
+                                <p class="text-xs text-gray-500 mt-1">> LOC: {{ event.location }}</p>
+                                <p class="text-xs text-gray-500">> T: {{ event.start_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-600 font-mono text-xs uppercase tracking-widest border border-gray-800 p-4 text-center bg-black">No hay asignaciones activas. Revise Monitor de Eventos.</p>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</body>
+</html>

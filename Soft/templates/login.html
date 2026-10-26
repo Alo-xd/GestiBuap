@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valhala | Iniciar Sesión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-indigo-600">Valhala Events</h1>
+            <p class="text-gray-500 mt-2">Plataforma de Gestión Corporativa</p>
+        </div>
+        
+        <!-- Alertas dinámicas -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              {% if category == 'error' %}
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 text-sm">{{ message }}</div>
+              {% else %}
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-4 text-sm">{{ message }}</div>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('login') }}" method="POST" class="space-y-6">
+            <div>
+                <label class="block text-sm font-bold text-gray-700">Correo Electrónico</label>
+                <input type="email" name="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700">Contraseña</label>
+                <input type="password" name="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+            </div>
+            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-md text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition">
+                Acceder al Sistema
+            </button>
+        </form>
+
+        <div class="mt-6 border-t pt-4 text-center">
+            <p class="text-sm text-gray-600">¿Eres nuevo en la empresa?</p>
+            <a href="{{ url_for('register') }}" class="text-indigo-600 hover:text-indigo-800 font-bold transition">Solicitar cuenta corporativa</a>
+        </div>
+    </div>
+</body>
+</html>
